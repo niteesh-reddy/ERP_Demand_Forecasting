@@ -259,9 +259,3 @@ curl http://localhost:8000/models
 - **MAPE** — Mean Absolute Percentage Error (model selection criterion)
 - **Training time** — wall-clock seconds
 - **Inference time** — wall-clock seconds per forecast call
-
----
-
-## License
-
-MIT License — free to use and modify.
