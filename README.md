@@ -18,7 +18,7 @@ Modern enterprises running SAP S/4HANA face a critical challenge: **demand volat
 - Preventing stockouts that cost lost revenue
 - Aligning production schedules with predicted demand
 
-This microservice **benchmarks five industry-standard forecasting models** and automatically promotes the best one into a live REST API — replacing manual SAP IBP configuration with a self-tuning ML pipeline.
+This microservice **benchmarks industry-standard forecasting models** and automatically promotes the best one into a live REST API — replacing manual SAP IBP configuration with a self-tuning ML pipeline.
 
 ---
 
@@ -38,7 +38,7 @@ This microservice **benchmarks five industry-standard forecasting models** and a
 │                  │                      │                        │
 │          ┌───────┼──────┬──────┬───────┤                        │
 │          ▼       ▼      ▼      ▼       ▼                        │
-│       SARIMA  Prophet XGBoost LSTM    TFT                        │
+│       SARIMA  XGBoost LSTM   TFT   [Prophet*]                   │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────┐    │
 │  │  SAP S/4HANA Tables (simulated)                          │    │
@@ -52,13 +52,13 @@ This microservice **benchmarks five industry-standard forecasting models** and a
 
 ## Model Comparison
 
-| Model | Strengths | Weaknesses | Best For |
-|-------|-----------|------------|----------|
-| **SARIMA** | Interpretable, strong on stationary series | Slow, manual tuning | Stable products |
-| **Prophet** | Holiday effects, trend changepoints | Less accurate on noisy data | Seasonal spikes |
-| **XGBoost** | Fast, handles lag features natively | No temporal structure | Feature-rich datasets |
-| **LSTM** | Learns temporal dependencies | Needs lots of data | Complex multivariate patterns |
-| **TFT** | Probabilistic, attention mechanism | Slowest, most complex | Production at scale |
+| Model | Strengths | Weaknesses | Best For | Status |
+|-------|-----------|------------|----------|--------|
+| **SARIMA** | Interpretable, strong on stationary series | Slow, manual tuning | Stable products | Available |
+| **XGBoost** | Fast, handles lag features natively | No temporal structure | Feature-rich datasets | Available |
+| **LSTM** | Learns temporal dependencies | Needs lots of data | Complex multivariate patterns | Available |
+| **TFT** | Probabilistic, attention mechanism | Slowest, most complex | Production at scale | Available |
+| **Prophet** | Holiday effects, trend changepoints | Less accurate on noisy data | Seasonal spikes | Planned |
 
 The system **auto-selects the best model based on lowest MAPE** and registers it.
 
@@ -249,6 +249,21 @@ curl http://localhost:8000/models
 | `inventory_level` | Current stock on hand |
 | `category_encoded` | Product category (ordinal) |
 | `region_encoded` | Warehouse region (ordinal) |
+
+---
+
+## Benchmark Results
+
+Results on synthetic ERP data (P001 / W001, 730-day history, 30-day horizon):
+
+| Model | MAE | RMSE | MAPE% | Train (s) | Infer (s) |
+|-------|-----|------|-------|-----------|----------|
+| **SARIMA** | 7.09 | 9.67 | 9.43 | 0.63 | 0.004 |
+| **XGBoost** * | **6.95** | 10.39 | **9.47** | 5.33 | 0.089 |
+| **LSTM** | 8.58 | 12.25 | 12.17 | 11.01 | 0.527 |
+| **TFT** | 9.63 | 13.08 | 12.49 | 41.94 | 0.002 |
+
+\* Auto-selected as best model (lowest MAE). Prophet integration is planned for a future release.
 
 ---
 
