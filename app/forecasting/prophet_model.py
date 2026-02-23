@@ -90,6 +90,29 @@ class ProphetModel:
                 "Prophet is not installed. Run: pip install prophet"
             ) from exc
 
+        # --- Ensure cmdstanpy can find the CmdStan binary ---
+        # In Docker with non-root user, the default ~/.cmdstan path is
+        # not writable. Search common install locations and set explicitly.
+        import os
+        import glob
+        _cmdstan_candidates = [
+            os.environ.get("CMDSTAN", ""),           # env var if set
+            "/tmp/cmdstan",                           # our manual install dir
+        ]
+        # Also search for versioned subdirs like /tmp/cmdstan/cmdstan-2.38.0
+        for _base in ["/tmp/cmdstan", "/tmp"]:
+            _cmdstan_candidates += glob.glob(f"{_base}/cmdstan-*")
+
+        for _path in _cmdstan_candidates:
+            if _path and os.path.isdir(_path):
+                try:
+                    import cmdstanpy as _csp
+                    _csp.set_cmdstan_path(_path)
+                    logger.info("[%s] CmdStan path set to: %s", self.MODEL_NAME, _path)
+                    break
+                except Exception:
+                    continue
+
         # Prophet expects columns: ds (datetime), y (target)
         prophet_df = train_df[["date", "units_sold", "promotion_flag"]].copy()
         prophet_df = prophet_df.rename(columns={"date": "ds", "units_sold": "y"})

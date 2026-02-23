@@ -30,6 +30,10 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
+# Install CmdStan binary (required by Prophet for Bayesian fitting)
+# This compiles the C++ Stan backend that cmdstanpy wraps
+RUN python -c "import cmdstanpy; cmdstanpy.install_cmdstan(cores=2, progress=False)"
+
 # Copy application code
 COPY app/ ./app/
 COPY training/ ./training/
