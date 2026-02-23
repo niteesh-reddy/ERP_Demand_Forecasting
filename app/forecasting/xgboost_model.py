@@ -84,6 +84,11 @@ class XGBoostModel:
         )
 
         try:
+            # Split off last 20% as internal validation for early stopping
+            split = int(len(X_scaled) * 0.8)
+            X_tr, X_val = X_scaled[:split], X_scaled[split:]
+            y_tr, y_val = y[:split], y[split:]
+
             model = xgb.XGBRegressor(
                 n_estimators=300,
                 max_depth=6,
@@ -94,13 +99,20 @@ class XGBoostModel:
                 reg_alpha=0.1,
                 reg_lambda=1.0,
                 objective="reg:squarederror",
+                early_stopping_rounds=20,
                 random_state=42,
                 n_jobs=-1,
                 verbosity=0,
             )
-            model.fit(X_scaled, y, eval_set=[(X_scaled, y)], verbose=False)
-            logger.info("[%s] Training complete. Best iteration: %d",
-                        self.MODEL_NAME, model.best_iteration)
+            model.fit(
+                X_tr, y_tr,
+                eval_set=[(X_val, y_val)],
+                verbose=False,
+            )
+            logger.info(
+                "[%s] Training complete. Best iteration: %d",
+                self.MODEL_NAME, model.best_iteration,
+            )
         except Exception as exc:
             logger.error("[%s] Training failed: %s", self.MODEL_NAME, exc)
             raise RuntimeError(f"XGBoost training failed: {exc}") from exc

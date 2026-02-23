@@ -17,8 +17,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create a non-root user for security
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
-# Set working directory
 WORKDIR /app
+
+# Set writable env dirs for non-root user (matplotlib, cmdstanpy, etc.)
+ENV MPLCONFIGDIR=/tmp/matplotlib \
+    HOME=/tmp \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Copy and install dependencies first (layer caching)
 COPY requirements.txt .

@@ -130,7 +130,7 @@ def load_feature_data(
 
     # --- Merge sales + inventory ---
     df = df.merge(inv_df, on="date", how="left")
-    df["inventory_level"] = df["stock_available"].fillna(method="ffill").fillna(0.0)
+    df["inventory_level"] = df["stock_available"].ffill().fillna(0.0)
     df.drop(columns=["stock_available"], inplace=True)
 
     # Check minimum history

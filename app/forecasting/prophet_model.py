@@ -111,9 +111,33 @@ class ProphetModel:
             )
             # Add promotion as an additive extra regressor
             model.add_regressor("promotion_flag", mode="additive")
+
+            # Suppress verbose Stan output
+            import logging as _logging
+            _logging.getLogger("cmdstanpy").setLevel(_logging.WARNING)
+
             model.fit(prophet_df)
             self._fitted_model = model
             logger.info("[%s] Prophet fitting complete.", self.MODEL_NAME)
+        except AttributeError:
+            # Some prophet builds require explicit backend init
+            try:
+                import cmdstanpy  # noqa: F401
+                cmdstanpy.install_cmdstan()
+            except Exception:
+                pass
+            model = Prophet(
+                yearly_seasonality=True,
+                weekly_seasonality=True,
+                daily_seasonality=False,
+                seasonality_mode="multiplicative",
+                interval_width=0.95,
+                changepoint_prior_scale=0.05,
+            )
+            model.add_regressor("promotion_flag", mode="additive")
+            model.fit(prophet_df)
+            self._fitted_model = model
+            logger.info("[%s] Prophet fitting complete (fallback init).", self.MODEL_NAME)
         except Exception as exc:
             logger.error("[%s] Prophet fitting failed: %s", self.MODEL_NAME, exc)
             raise RuntimeError(f"Prophet training failed: {exc}") from exc

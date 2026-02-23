@@ -156,5 +156,5 @@ class SarimaModel:
         """
         series = train_df.set_index("date")["units_sold"].asfreq("D")
         # Fill any calendar gaps with forward fill (should not occur for seeded data)
-        series = series.fillna(method="ffill").fillna(method="bfill")
+        series = series.ffill().bfill()
         return series
