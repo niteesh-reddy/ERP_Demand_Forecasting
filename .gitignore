@@ -1,0 +1,57 @@
+# ============================================================
+# .gitignore — ERP Demand Forecasting
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+.env
+# (keep .env.example — that is intentional)
+
+# --- Trained model artefacts (can be large) ---
+models/
+!models/.gitkeep
+
+# --- Jupyter / IDE ---
+.ipynb_checkpoints/
+*.ipynb
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Docker volumes / data ---
+postgres_data/
+
+# --- Test artefacts ---
+test_modules.py
+.pytest_cache/
+htmlcov/
+.coverage
+
+# --- Misc ---
+*.swp
+*.swo

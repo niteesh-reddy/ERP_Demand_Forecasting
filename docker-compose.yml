@@ -1,0 +1,55 @@
+# ============================================================
+# docker-compose.yml — Enterprise Demand Forecasting Stack
+# Orchestrates: PostgreSQL + FastAPI microservice
+# ============================================================
+
+version: "3.9"
+
+services:
+
+  # --- PostgreSQL ERP-style database ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: erp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-erp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-erp_forecast}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp_user}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- FastAPI Forecasting Microservice ---
+  api:
+    build: .
+    container_name: erp_forecast_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-erp_user}:${POSTGRES_PASSWORD:-erp_pass}@postgres:5432/${POSTGRES_DB:-erp_forecast}
+      MODELS_DIR: /app/models
+      LOG_LEVEL: INFO
+      APP_VERSION: "1.0.0"
+    ports:
+      - "8000:8000"
+    volumes:
+      - models_volume:/app/models
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import httpx; r=httpx.get('http://localhost:8000/health'); exit(0 if r.status_code==200 else 1)" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+volumes:
+  postgres_data:
+  models_volume:
